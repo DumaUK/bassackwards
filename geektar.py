@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#
-#      ___ ___ ___ _  _______ _   ___   
-#     / __| __| __| |/ /_   _/_\ | _ \  
-#    | (_ | _|| _|| ' <  | |/ _ \|   /  
-#     \___|___|___|_|\_\ |_/_/ \_\_|_\ 
-#
-#
-# Copyright (C) 2009 Florian Herlings (florianherlings.de)
+#  ____                             _                           _     
+# |  _ \                  /\       | |                         | |    
+# | |_) | __ _ ___ ___   /  \   ___| | ____      ____ _ _ __ __| |___ 
+# |  _ < / _` / __/ __| / /\ \ / __| |/ /\ \ /\ / / _` | '__/ _` / __|
+# | |_) | (_| \__ \__ \/ ____ \ (__|   <  \ V  V / (_| | | | (_| \__ \
+# |____/ \__,_|___/___/_/    \_\___|_|\_\  \_/\_/ \__,_|_|  \__,_|___/
+# 
+# Based on Geektar v0.1 Copyright (C) 2009 Florian Herlings (florianherlings.de)
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,24 +22,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
 # Version:      0.1
-# Date:         29.11.2009
-# Depends on:   PyGame, winsound
+# Date:         21.02.2019
+# Depends on:   PyGame, pyautogui
 
 import winsound
 import os
 import sys
 import pygame
 from pygame import locals
-
+from pyautogui import press
 
 
 console_ascii_logo = """\
-      ___ ___ ___ _  _______ _   ___   
-     / __| __| __| |/ /_   _/_\ | _ \  
-    | (_ | _|| _|| ' <  | |/ _ \|   /  
-     \___|___|___|_|\_\ |_/_/ \_\_|_\ 
-   ------------------------------------
-                                  v.01
+ __        __   __        __                  __   __   __  
+|__)  /\  /__` /__`  /\  /  ` |__/ |  |  /\  |__) |  \ /__` 
+|__) /~~\ .__/ .__/ /~~\ \__, |  \ |/\| /~~\ |  \ |__/ .__/ 
+ v.01
   """
 
 
@@ -64,7 +62,7 @@ class Guitar(object):
     self.button3 = 0
     self.button4 = 0
     self.trigger = 0
-    self.freq = 0
+    self.joyname = ''
 
   def event(self, e):
     self.trigger = 0
@@ -86,12 +84,22 @@ class Guitar(object):
         it. This method always returns the number of the
         pressed button, not an event.
     """
-    if e.button == 2:
-      return 3
-    elif e.button == 3:
-      return 2
+    if "Hero5" in self.joyname:
+      if e.button == 1:
+        return 0
+      elif e.button == 2:
+        return 1
+      elif e.button == 0:
+        return 2
+      else:
+        return e.button
     else:
-      return e.button
+      if e.button == 2:
+        return 3
+      elif e.button == 3:
+        return 2
+      else:
+        return e.button
   
   def do_trigger(self, e):
   
@@ -103,26 +111,22 @@ class Guitar(object):
     if self.button3 == 1: self.button3 = 2
     if self.button4 == 1: self.button4 = 2   
     
-    print self
+    print(self)
 
 
   def update(self):
-  
-    self.freq = 0
-    if self.button0 == 2: self.freq = self.freq + 110
-    if self.button1 == 2: self.freq = self.freq + 146
-    if self.button2 == 2: self.freq = self.freq + 196
-    if self.button3 == 2: self.freq = self.freq + 246
-    if self.button4 == 2: self.freq = self.freq + 329
+
+    key = ''
+    if self.button0 == 2: key = '1'
+    if self.button1 == 2: key = '2'
+    if self.button2 == 2: key = '3'
+    if self.button3 == 2: key = '4'
+    if self.button4 == 2: key = '5'
 
     if self.trigger:
-      self.freq += 20
+      press(key)
 
-    try:
-      winsound.Beep(self.freq, 30)   
-    except ValueError:
-      self.freq = 0
-    
+    self.trigger = False
     
   def __str__(self):
     """ The __str__ method is called whenever the class' instance is
@@ -130,7 +134,7 @@ class Guitar(object):
         but at least somewhat visual representation of the instances
         current data and output.
     """
-    return "  BUTTONS: [%i] [%i] [%i] [%i] [%i] | TRIGGER: (%i) | FREQ: %i" % (self.button0, self.button1, self.button2, self.button3, self.button4, self.trigger, self.freq)
+    return "  BUTTONS: [%i] [%i] [%i] [%i] [%i] | TRIGGER: (%i)" % (self.button0, self.button1, self.button2, self.button3, self.button4, self.trigger)
 
 
 
@@ -141,18 +145,17 @@ if __name__ == "__main__":
   pygame.init()
   pygame.joystick.init() # main joystick device system
   
-  print console_ascii_logo
+  print(console_ascii_logo)
 
+  g = Guitar()
 
   try:
     j = pygame.joystick.Joystick(0) # create a joystick instance
     j.init() # init instance
-    print 'Enabled joystick: ' + j.get_name()
+    g.joyname = j.get_name()
+    print('Enabled joystick: ' + g.joyname)
   except pygame.error:
-    print 'no joystick found.'
-
-
-  g = Guitar()
+    print('no joystick found.')
 
   while 1:
     for e in pygame.event.get():
